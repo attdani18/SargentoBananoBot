@@ -1,7 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
-const path = require('path');
+const { Client, GatewayIntentBits } = require('discord.js');
 
 const app = express();
 app.get('/', (req, res) => res.send('Sargento Banano activo'));
@@ -25,7 +24,6 @@ const frasesTropicales = [
   '¡Disparen al mono antes de que se escape!'
 ];
 
-// Enlaces confiables de gifs de monos y waifus
 const gifsMonos = [
   'https://i.imgur.com/ZKXzNya.gif',
   'https://i.imgur.com/yJolD2z.gif',
@@ -45,32 +43,38 @@ const personajes = [
 
 let contador = 0;
 
-// Envía gif como archivo adjunto
-async function enviarGif(canal, texto, url) {
+async function cicloMonos() {
   try {
-    const archivo = new AttachmentBuilder(url);
-    await canal.send({ content: texto, files: [archivo] });
-  } catch (err) {
-    console.log('Error enviando gif:', err.message);
+    const canal = await client.channels.fetch('1370495546321666108');
+    if (canal) {
+      const frase = frasesTropicales[Math.floor(Math.random() * frasesTropicales.length)];
+      const gif = gifsMonos[Math.floor(Math.random() * gifsMonos.length)];
+      console.log(`[MONO] Enviando: ${frase} + ${gif}`);
+      await canal.send(`${frase}\n${gif}`);
+    } else {
+      console.log('[MONO] Canal no encontrado');
+    }
+  } catch (error) {
+    console.log('[MONO] Error:', error.message);
   }
-}
 
-function cicloMonos() {
-  const canal = client.channels.cache.get('1370495546321666108');
-  if (canal) {
-    const frase = frasesTropicales[Math.floor(Math.random() * frasesTropicales.length)];
-    const gif = gifsMonos[Math.floor(Math.random() * gifsMonos.length)];
-    enviarGif(canal, frase, gif);
-  }
   setTimeout(cicloMonos, 10 * 60 * 1000);
 }
 
-function cicloWaifus() {
-  const canal = client.channels.cache.get('1370495546321666108');
-  if (canal) {
-    const personaje = personajes[Math.floor(Math.random() * personajes.length)];
-    enviarGif(canal, '🌟 ¡Nuevo personaje apareció! ¿Quién lo reclama?', personaje);
+async function cicloWaifus() {
+  try {
+    const canal = await client.channels.fetch('1370495546321666108');
+    if (canal) {
+      const personaje = personajes[Math.floor(Math.random() * personajes.length)];
+      console.log(`[WAIFU] Enviando personaje: ${personaje}`);
+      await canal.send(`🌟 ¡Nuevo personaje apareció! ¿Quién lo reclama?\n${personaje}`);
+    } else {
+      console.log('[WAIFU] Canal no encontrado');
+    }
+  } catch (error) {
+    console.log('[WAIFU] Error:', error.message);
   }
+
   setTimeout(cicloWaifus, 20 * 60 * 1000);
 }
 
