@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, AttachmentBuilder } = require('discord.js');
+const path = require('path');
 
 const app = express();
 app.get('/', (req, res) => res.send('Sargento Banano activo'));
@@ -24,18 +25,19 @@ const frasesTropicales = [
   '¡Disparen al mono antes de que se escape!'
 ];
 
+// Enlaces confiables de gifs de monos y waifus
 const gifsMonos = [
-  'https://media.tenor.com/SZdi4B2MZqwAAAAC/monkey-shoot.gif',
-  'https://media.tenor.com/JZMbPXX6kB4AAAAC/monke-shoot.gif',
-  'https://media.tenor.com/fmXt2NdKP2kAAAAC/gun-monkey.gif',
-  'https://media.tenor.com/N9SSMH09_H8AAAAC/monkey.gif'
+  'https://i.imgur.com/ZKXzNya.gif',
+  'https://i.imgur.com/yJolD2z.gif',
+  'https://i.imgur.com/wlEVUvt.gif',
+  'https://i.imgur.com/Dch8Srn.gif'
 ];
 
 const personajes = [
-  'https://media.tenor.com/C8p9QbfuGpYAAAAC/waifu-anime.gif',
-  'https://media.tenor.com/SK2aPf4YYRgAAAAd/waifu-toradora.gif',
-  'https://media.tenor.com/XY9QmBme7nQAAAAC/waifu-hearts.gif',
-  'https://media.tenor.com/_yDQk09dPfQAAAAC/waifu-love.gif',
+  'https://i.imgur.com/2n0kFZO.gif',
+  'https://i.imgur.com/7ydZ0pG.gif',
+  'https://i.imgur.com/5W2tw9L.gif',
+  'https://i.imgur.com/K8FvYvG.gif',
   'https://i.imgur.com/E5IuAvT.png',
   'https://i.imgur.com/lZ9cbF6.jpeg',
   'https://i.imgur.com/yDbd9OZ.jpeg'
@@ -43,12 +45,22 @@ const personajes = [
 
 let contador = 0;
 
+// Envía gif como archivo adjunto
+async function enviarGif(canal, texto, url) {
+  try {
+    const archivo = new AttachmentBuilder(url);
+    await canal.send({ content: texto, files: [archivo] });
+  } catch (err) {
+    console.log('Error enviando gif:', err.message);
+  }
+}
+
 function cicloMonos() {
   const canal = client.channels.cache.get('1370495546321666108');
   if (canal) {
     const frase = frasesTropicales[Math.floor(Math.random() * frasesTropicales.length)];
     const gif = gifsMonos[Math.floor(Math.random() * gifsMonos.length)];
-    canal.send(`${frase}\n${gif}`);
+    enviarGif(canal, frase, gif);
   }
   setTimeout(cicloMonos, 10 * 60 * 1000);
 }
@@ -57,7 +69,7 @@ function cicloWaifus() {
   const canal = client.channels.cache.get('1370495546321666108');
   if (canal) {
     const personaje = personajes[Math.floor(Math.random() * personajes.length)];
-    canal.send(`🌟 ¡Nuevo personaje apareció! ¿Quién lo reclama?\n${personaje}`);
+    enviarGif(canal, '🌟 ¡Nuevo personaje apareció! ¿Quién lo reclama?', personaje);
   }
   setTimeout(cicloWaifus, 20 * 60 * 1000);
 }
