@@ -1,0 +1,12 @@
+{
+  "name": "sargento-banano",
+  "version": "1.0.0",
+  "description": "Bot tropical para Puerto Banano",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.13.0"
+  }
+}
