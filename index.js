@@ -1,5 +1,10 @@
 require('dotenv').config();
+const express = require('express');
 const { Client, GatewayIntentBits } = require('discord.js');
+
+const app = express();
+app.get('/', (req, res) => res.send('Sargento Banano activo'));
+app.listen(3000, () => console.log('Servidor HTTP corriendo en puerto 3000'));
 
 const client = new Client({
   intents: [
@@ -38,31 +43,29 @@ const personajes = [
 
 let contador = 0;
 
-client.once('ready', () => {
-  console.log(`¡Sargento Banano está en línea como ${client.user.tag}!`);
-
-  // Mensajes automáticos de monos cada 10 minutos
-  setInterval(() => {
-    const canal = client.channels.cache.get('1370495546321666108');
-    if (!canal) {
-      console.log('No se encontró el canal del mono.');
-      return;
-    }
+function cicloMonos() {
+  const canal = client.channels.cache.get('1370495546321666108');
+  if (canal) {
     const frase = frasesTropicales[Math.floor(Math.random() * frasesTropicales.length)];
     const gif = gifsMonos[Math.floor(Math.random() * gifsMonos.length)];
     canal.send(`${frase}\n${gif}`);
-  }, 10 * 60 * 1000); // 10 minutos
+  }
+  setTimeout(cicloMonos, 10 * 60 * 1000);
+}
 
-  // Mensajes automáticos de waifus/memes cada 20 minutos
-  setInterval(() => {
-    const canal = client.channels.cache.get('1370495546321666108');
-    if (!canal) {
-      console.log('No se encontró el canal de personajes.');
-      return;
-    }
+function cicloWaifus() {
+  const canal = client.channels.cache.get('1370495546321666108');
+  if (canal) {
     const personaje = personajes[Math.floor(Math.random() * personajes.length)];
     canal.send(`🌟 ¡Nuevo personaje apareció! ¿Quién lo reclama?\n${personaje}`);
-  }, 20 * 60 * 1000); // 20 minutos
+  }
+  setTimeout(cicloWaifus, 20 * 60 * 1000);
+}
+
+client.once('ready', () => {
+  console.log(`¡Sargento Banano está en línea como ${client.user.tag}!`);
+  setTimeout(cicloMonos, 10 * 1000);
+  setTimeout(cicloWaifus, 30 * 1000);
 });
 
 client.on('messageCreate', message => {
