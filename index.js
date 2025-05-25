@@ -1,112 +1,94 @@
-require('dotenv').config();
-const express = require('express');
 const { Client, GatewayIntentBits } = require('discord.js');
-
+const express = require('express');
 const app = express();
-app.get('/', (req, res) => res.send('Sargento Banano activo'));
-app.listen(3000, () => console.log('Servidor HTTP corriendo en puerto 3000'));
-
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent,
-  ]
+  ],
 });
 
-const frasesTropicales = [
-  '¡Dijeron MONO! ¡Permiso, que esto se pone tropical!',
-  '¡Banano detectado, nivel de sabrosura aumentando!',
-  '¡Explosión tropical inminente!',
-  '¡Péguele al mono que se nos va!',
-  '¡Puerto Banano nunca se rinde!',
-  '¡Hora de la operación sabrosura!',
-  '¡Disparen al mono antes de que se escape!'
+const canalID = '1370495546321666108';
+
+// Lista de frases para "mono"
+const frasesMono = [
+  '¡Disparen al mono!',
+  '¡BANG BANG! ¡No dejen que escape el mono!',
+  '¿Dijeron MONO? ¡Permiso, que esto se pone tropical!',
+  '¡Alerta tropical! ¡Hay un mono suelto!',
 ];
 
-const gifsMonos = [
-  'https://i.imgur.com/ZKXzNya.gif',
-  'https://i.imgur.com/yJolD2z.gif',
-  'https://i.imgur.com/wlEVUvt.gif',
-  'https://i.imgur.com/Dch8Srn.gif'
+// Lista de URLs de gifs de waifus, memes, etc
+const galeria = [
+  'https://media.tenor.com/kMNyQZy8KyoAAAAC/yuno-gasai-yandere.gif',
+  'https://media.tenor.com/MLsCbnQGPhEAAAAC/anime-hot.gif',
+  'https://media.tenor.com/mCAj-wKqB_gAAAAd/banano-tropical.gif',
+  'https://media.tenor.com/SsMkNyij1jMAAAAC/gun-monkey.gif',
+  'https://media.tenor.com/lo4slEuzVksAAAAd/nerd-anime.gif',
+  'https://media.tenor.com/IJJ_G_Z5dJkAAAAC/banana-monkey.gif',
+  // Puedes agregar más de 10 mil si querés, con un JSON o desde un link externo
 ];
 
-const personajes = [
-  'https://i.imgur.com/2n0kFZO.gif',
-  'https://i.imgur.com/7ydZ0pG.gif',
-  'https://i.imgur.com/5W2tw9L.gif',
-  'https://i.imgur.com/K8FvYvG.gif',
-  'https://i.imgur.com/E5IuAvT.png',
-  'https://i.imgur.com/lZ9cbF6.jpeg',
-  'https://i.imgur.com/yDbd9OZ.jpeg'
-];
+// Sistema de puntaje
+const puntos = {};
 
-let contador = 0;
-
-async function cicloMonos() {
-  try {
-    const canal = await client.channels.fetch('1370495546321666108');
-    if (canal) {
-      const frase = frasesTropicales[Math.floor(Math.random() * frasesTropicales.length)];
-      const gif = gifsMonos[Math.floor(Math.random() * gifsMonos.length)];
-      console.log(`[MONO] Enviando: ${frase} + ${gif}`);
-      await canal.send(`${frase}\n${gif}`);
-    } else {
-      console.log('[MONO] Canal no encontrado');
-    }
-  } catch (error) {
-    console.log('[MONO] Error:', error.message);
+// Comando !tirar
+client.on('messageCreate', message => {
+  if (message.content.toLowerCase() === '!tirar') {
+    const usuario = message.author.username;
+    puntos[usuario] = (puntos[usuario] || 0) + 5;
+    message.reply('¡BANG! ¡Le diste al mono! +5 puntos');
   }
 
-  setTimeout(cicloMonos, 10 * 60 * 1000);
-}
-
-async function cicloWaifus() {
-  try {
-    const canal = await client.channels.fetch('1370495546321666108');
-    if (canal) {
-      const personaje = personajes[Math.floor(Math.random() * personajes.length)];
-      console.log(`[WAIFU] Enviando personaje: ${personaje}`);
-      await canal.send(`🌟 ¡Nuevo personaje apareció! ¿Quién lo reclama?\n${personaje}`);
+  if (message.content.toLowerCase() === '!ranking') {
+    if (Object.keys(puntos).length === 0) {
+      message.channel.send('Nadie ha disparado al mono aún.');
     } else {
-      console.log('[WAIFU] Canal no encontrado');
+      const ranking = Object.entries(puntos)
+        .sort((a, b) => b[1] - a[1])
+        .map(([usuario, puntaje], index) => `${index + 1}. ${usuario}: ${puntaje} puntos`)
+        .join('\n');
+      message.channel.send(`**Ranking del Mono:**\n${ranking}`);
     }
-  } catch (error) {
-    console.log('[WAIFU] Error:', error.message);
   }
 
-  setTimeout(cicloWaifus, 20 * 60 * 1000);
-}
+  // Si mencionan la palabra "mono"
+  if (message.content.toLowerCase().includes('mono')) {
+    message.channel.send('¿Dijeron MONO? ¡Permiso, que esto se pone tropical!');
+  }
 
+  // Si alguien manda una imagen o link
+  if (message.attachments.size > 0 || message.content.includes('http')) {
+    message.channel.send('¡Qué sabrosura visual! Esto se va directo al archivo bananero.');
+  }
+});
+
+// Mensajes automáticos cada cierto tiempo
 client.once('ready', () => {
   console.log(`¡Sargento Banano está en línea como ${client.user.tag}!`);
-  setTimeout(cicloMonos, 10 * 1000);
-  setTimeout(cicloWaifus, 30 * 1000);
+
+  // Cada 10 minutos: mensaje de disparar al mono
+  setInterval(() => {
+    const canal = client.channels.cache.get(canalID);
+    if (canal) {
+      const frase = frasesMono[Math.floor(Math.random() * frasesMono.length)];
+      canal.send(frase);
+    }
+  }, 10 * 60 * 1000);
+
+  // Cada 20 minutos: enviar gif o imagen random
+  setInterval(() => {
+    const canal = client.channels.cache.get(canalID);
+    if (canal) {
+      const url = galeria[Math.floor(Math.random() * galeria.length)];
+      canal.send({ content: '¡Sabrosura desbloqueada!', files: [url] });
+    }
+  }, 20 * 60 * 1000);
 });
 
-client.on('messageCreate', message => {
-  if (message.author.bot) return;
-
-  const contenido = message.content.toLowerCase();
-
-  if (contenido === '!tirar') {
-    contador += 5;
-    message.reply(`¡BANG! ¡Le diste al mono! +5 puntos (Total: ${contador})`);
-  }
-
-  if (contenido === '!ranking') {
-    message.channel.send(`🏆 Puntaje total acumulado: ${contador} puntos.`);
-  }
-
-  const palabrasClave = ['mono', 'banano', 'explosión'];
-  if (palabrasClave.some(p => contenido.includes(p))) {
-    const respuesta = frasesTropicales[Math.floor(Math.random() * frasesTropicales.length)];
-    message.channel.send(respuesta);
-  }
-
-  if (message.attachments.size > 0 || message.content.includes('https://tenor.com')) {
-    message.channel.send('📸 ¡Qué sabrosura visual! Esto se va directo a los archivos del comando.');
-  }
-});
+// Evitar que Railway duerma el bot
+app.get('/', (req, res) => res.send('Bot activo'));
+app.listen(3000, () => console.log('Servidor express activo'));
 
 client.login(process.env.DISCORD_TOKEN);
