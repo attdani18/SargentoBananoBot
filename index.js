@@ -41,24 +41,28 @@ let contador = 0;
 client.once('ready', () => {
   console.log(`¡Sargento Banano está en línea como ${client.user.tag}!`);
 
-  const canal = client.channels.cache.find(c => c.name === 'muelle-general' && c.isTextBased());
-  if (!canal) {
-    console.log('No se encontró el canal muelle-general.');
-    return;
-  }
+  // Esperar unos segundos para asegurarse que el canal esté disponible
+  setTimeout(() => {
+    const canal = client.channels.cache.get('1370495546321666108');
+    if (!canal) {
+      console.log('No se encontró el canal por ID.');
+      return;
+    }
 
-  // Mensaje automático de monos cada 10 minutos
-  setInterval(() => {
-    const frase = frasesTropicales[Math.floor(Math.random() * frasesTropicales.length)];
-    const gif = gifsMonos[Math.floor(Math.random() * gifsMonos.length)];
-    canal.send(`${frase}\n${gif}`);
-  }, 10 * 60 * 1000); // cada 10 minutos
+    // Mensajes de monos cada 10 minutos
+    setInterval(() => {
+      const frase = frasesTropicales[Math.floor(Math.random() * frasesTropicales.length)];
+      const gif = gifsMonos[Math.floor(Math.random() * gifsMonos.length)];
+      canal.send(`${frase}\n${gif}`);
+    }, 10 * 60 * 1000); // 10 minutos
 
-  // Mensaje automático de waifus/memes cada 20 minutos
-  setInterval(() => {
-    const personaje = personajes[Math.floor(Math.random() * personajes.length)];
-    canal.send(`🌟 ¡Nuevo personaje apareció! ¿Quién lo reclama?\n${personaje}`);
-  }, 20 * 60 * 1000); // cada 20 minutos
+    // Mensajes de waifus/memes cada 20 minutos
+    setInterval(() => {
+      const personaje = personajes[Math.floor(Math.random() * personajes.length)];
+      canal.send(`🌟 ¡Nuevo personaje apareció! ¿Quién lo reclama?\n${personaje}`);
+    }, 20 * 60 * 1000); // 20 minutos
+
+  }, 5000); // esperar 5 segundos antes de buscar el canal
 });
 
 client.on('messageCreate', message => {
