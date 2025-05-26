@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const express = require('express');
 const app = express();
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -10,85 +11,82 @@ const client = new Client({
 });
 
 const canalID = '1370495546321666108';
+const puntos = {};
+let cooldownActivo = false;
 
-// Lista de frases para "mono"
-const frasesMono = [
-  '¡Disparen al mono!',
-  '¡BANG BANG! ¡No dejen que escape el mono!',
-  '¿Dijeron MONO? ¡Permiso, que esto se pone tropical!',
-  '¡Alerta tropical! ¡Hay un mono suelto!',
-];
-
-// Lista de URLs de gifs de waifus, memes, etc
-const galeria = [
+const personajes = [
+  'https://i.imgur.com/2n0kFZO.gif',
+  'https://i.imgur.com/7ydZ0pG.gif',
+  'https://i.imgur.com/5W2tw9L.gif',
+  'https://i.imgur.com/K8FvYvG.gif',
+  'https://i.imgur.com/E5IuAvT.png',
+  'https://i.imgur.com/lZ9cbF6.jpeg',
+  'https://i.imgur.com/yDbd9OZ.jpeg',
   'https://media.tenor.com/kMNyQZy8KyoAAAAC/yuno-gasai-yandere.gif',
   'https://media.tenor.com/MLsCbnQGPhEAAAAC/anime-hot.gif',
-  'https://media.tenor.com/mCAj-wKqB_gAAAAd/banano-tropical.gif',
-  'https://media.tenor.com/SsMkNyij1jMAAAAC/gun-monkey.gif',
-  'https://media.tenor.com/lo4slEuzVksAAAAd/nerd-anime.gif',
-  'https://media.tenor.com/IJJ_G_Z5dJkAAAAC/banana-monkey.gif',
-  // Puedes agregar más de 10 mil si querés, con un JSON o desde un link externo
+  'https://media.tenor.com/mCAj-wKqB_gAAAAd/banano-tropical.gif'
 ];
 
-// Sistema de puntaje
-const puntos = {};
+client.once('ready', () => {
+  console.log(`¡Sargento Banano está en línea como ${client.user.tag}!`);
+});
 
-// Comando !tirar
-client.on('messageCreate', message => {
-  if (message.content.toLowerCase() === '!tirar') {
-    const usuario = message.author.username;
+// Comandos
+client.on('messageCreate', async message => {
+  if (message.author.bot) return;
+
+  const contenido = message.content.toLowerCase();
+  const usuario = message.author.username;
+
+  if (contenido === '!tirar') {
     puntos[usuario] = (puntos[usuario] || 0) + 5;
     message.reply('¡BANG! ¡Le diste al mono! +5 puntos');
   }
 
-  if (message.content.toLowerCase() === '!ranking') {
+  if (contenido === '!ranking') {
     if (Object.keys(puntos).length === 0) {
       message.channel.send('Nadie ha disparado al mono aún.');
     } else {
       const ranking = Object.entries(puntos)
         .sort((a, b) => b[1] - a[1])
-        .map(([usuario, puntaje], index) => `${index + 1}. ${usuario}: ${puntaje} puntos`)
+        .map(([usuario, score], i) => `${i + 1}. ${usuario}: ${score} puntos`)
         .join('\n');
-      message.channel.send(`**Ranking del Mono:**\n${ranking}`);
+      message.channel.send(`🏆 **Ranking del Mono:**\n${ranking}`);
     }
   }
 
-  // Si mencionan la palabra "mono"
-  if (message.content.toLowerCase().includes('mono')) {
-    message.channel.send('¿Dijeron MONO? ¡Permiso, que esto se pone tropical!');
-  }
+  if (contenido === '!call') {
+    if (cooldownActivo) {
+      message.reply('¡Aguantá! Solo se puede lanzar waifus cada 30 minutos.');
+      return;
+    }
 
-  // Si alguien manda una imagen o link
-  if (message.attachments.size > 0 || message.content.includes('http')) {
-    message.channel.send('¡Qué sabrosura visual! Esto se va directo al archivo bananero.');
+    cooldownActivo = true;
+    puntos[usuario] = (puntos[usuario] || 0) + 5;
+    message.channel.send(`¡${usuario} lanzó una ronda de personajes! +5 puntos`);
+
+    const canal = client.channels.cache.get(canalID);
+    if (!canal) {
+      message.channel.send('Error: No se encontró el canal.');
+      return;
+    }
+
+    for (let i = 0; i < 5; i++) {
+      const img = personajes[Math.floor(Math.random() * personajes.length)];
+      const valor = Math.floor(Math.random() * 401) + 100; // entre 100 y 500
+      await canal.send({ content: `🌟 Valor: ${valor} bananas`, files: [img] });
+    }
+
+    // Cooldown de 30 minutos
+    setTimeout(() => {
+      cooldownActivo = false;
+      canal.send('¡La próxima ronda de personajes ya está disponible! Usá `!call` para lanzarla.');
+    }, 30 * 60 * 1000);
   }
 });
 
-// Mensajes automáticos cada cierto tiempo
-client.once('ready', () => {
-  console.log(`¡Sargento Banano está en línea como ${client.user.tag}!`);
-
-  // Cada 10 minutos: mensaje de disparar al mono
-  setInterval(() => {
-    const canal = client.channels.cache.get(canalID);
-    if (canal) {
-      const frase = frasesMono[Math.floor(Math.random() * frasesMono.length)];
-      canal.send(frase);
-    }
-  }, 10 * 60 * 1000);
-
-  // Cada 20 minutos: enviar gif o imagen random
-  setInterval(() => {
-    const canal = client.channels.cache.get(canalID);
-    if (canal) {
-      const url = galeria[Math.floor(Math.random() * galeria.length)];
-      canal.send({ content: '¡Sabrosura desbloqueada!', files: [url] });
-    }
-  }, 20 * 60 * 1000);
-});
-
-// Evitar que Railway duerma el bot
-app.get('/', (req, res) => res.send('Bot activo'));
-app.listen(3000, () => console.log('Servidor express activo'));
+// Servidor HTTP para mantener Railway activo
+app.get('/', (req, res) => res.send('Sargento Banano activo'));
+app.listen(3000, () => console.log('Servidor HTTP corriendo en puerto 3000'));
 
 client.login(process.env.DISCORD_TOKEN);
